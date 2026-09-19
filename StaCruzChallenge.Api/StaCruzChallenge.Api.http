@@ -1,0 +1,11 @@
+@StaCruzChallenge.Api_HostAddress = http://localhost:5269
+
+GET {{StaCruzChallenge.Api_HostAddress}}/openapi/v1.json
+Accept: application/json
+
+###
+
+GET {{StaCruzChallenge.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

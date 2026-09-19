@@ -1,0 +1,86 @@
+## Build artifacts
+bin/
+obj/
+out/
+
+## Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Visual Studio Code
+.vscode/
+*.code-workspace
+
+## Rider / JetBrains
+.idea/
+*.iml
+
+## Logs
+*.log
+logs/
+Log/
+LogFiles/
+
+## Cache
+*.cache
+*.db
+*.db-shm
+*.db-wal
+
+## NuGet
+*.nupkg
+packages/
+*.snupkg
+
+
+## ASP.NET Core
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.json
+
+## Environment variables
+.env
+.env.*
+
+## Docker
+docker-compose.override.yml
+docker-compose.*.override.yml
+**/docker-data/
+**/postgres-data/
+**/rabbitmq-data/
+
+## Keycloak
+keycloak-data/
+
+## Certificates
+*.pfx
+*.p12
+*.cer
+*.crt
+*.key
+
+## Publish output
+publish/
+dist/
+
+## Temporary files
+*.tmp
+*.temp
+*.bak
+
+## OS-specific
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
