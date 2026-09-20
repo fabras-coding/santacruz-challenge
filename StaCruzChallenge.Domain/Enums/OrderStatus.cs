@@ -5,6 +5,7 @@ namespace StaCruzChallenge.Domain.Enums
         Pending = 1,
         InProgress = 2,
         Completed = 3,
-        Cancelled = 4
+        Purchased = 5,
+        Failed = 4
     }
 }

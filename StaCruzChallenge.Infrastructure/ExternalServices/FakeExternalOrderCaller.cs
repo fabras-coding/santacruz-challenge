@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace StaCruzChallenge.Infrastructure.Messaging
+namespace StaCruzChallenge.Infrastructure.ExternalServices
 {
-    public class OrderReceivedConsumer
+    public class FakeExternalOrderCaller
     {
         
     }

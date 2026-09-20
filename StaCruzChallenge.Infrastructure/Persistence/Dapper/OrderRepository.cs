@@ -24,7 +24,7 @@ namespace StaCruzChallenge.Infrastructure.Persistence.Dapper
             _logger = logger;
         }
 
-        public async Task<long> CreateAsync(Order order, CancellationToken cancellationToken)
+        public async Task<long> CreateAsync(Order order, OutboxOrderMessage outboxMessage, CancellationToken cancellationToken)
         {
 
             const string insertOrderSql = @"
@@ -72,6 +72,25 @@ namespace StaCruzChallenge.Infrastructure.Persistence.Dapper
                         new CommandDefinition(insertItemSql, param, transaction: transaction, cancellationToken: cancellationToken)
                     );
                 }
+
+
+                await conn.ExecuteAsync(
+                    new CommandDefinition(
+                        @"INSERT INTO outbox_orders (obo_id, obo_event_type, obo_payload, obo_status, obo_attempts, obo_createdat, obo_processedat)
+                          VALUES (@Id, @EventType, @Payload, @Status, @Attempts, @CreatedAt, NULL);",
+                        new
+                        {
+                            Id = outboxMessage.Id,
+                            CreatedAt = outboxMessage.CreatedAt,
+                            Payload = outboxMessage.Payload,
+                            EventType = outboxMessage.EventType,
+                            Status = outboxMessage.Status,
+                            Attempts = outboxMessage.Attempts
+                        },
+                        transaction: transaction,
+                        cancellationToken: cancellationToken
+                    )
+                );
 
                 await transaction.CommitAsync(cancellationToken);
                 _logger.LogInformation("Order {OrderId} created successfully.", orderId);

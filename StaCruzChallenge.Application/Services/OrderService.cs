@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using StaCruzChallenge.Application.Interfaces;
@@ -48,7 +49,18 @@ namespace StaCruzChallenge.Application.Services
                     .Sum(i => i.Quantity * validProducts.First(p => p.Id == i.ProductId).Price)
             };
 
-            var orderId = await _orderRepository.CreateAsync(orderEntity, cancellationToken);
+            var outboxMessage = new OutboxOrderMessage
+            {
+                Id = Guid.NewGuid(),
+                CreatedAt = DateTime.UtcNow,
+                Payload = JsonSerializer.Serialize(orderEntity),
+                EventType = "NEW_ORDER_CREATED",
+                Status = "Pending",
+                Attempts =0
+
+            }; 
+
+            var orderId = await _orderRepository.CreateAsync(orderEntity, outboxMessage, cancellationToken);
             _logger.LogInformation("Order created successfully with {ItemCount} items.", orderEntity.Items.Count);
 
             return new OrderCreatedResponseDto
