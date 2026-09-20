@@ -11,7 +11,7 @@ namespace StaCruzChallenge.Api.Middleware
         public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
         {
             
-              var (statusCode, title) = exception switch
+            var (statusCode, title) = exception switch
             {
                 
 
