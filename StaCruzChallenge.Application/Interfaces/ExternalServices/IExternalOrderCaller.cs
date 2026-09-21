@@ -7,6 +7,6 @@ namespace StaCruzChallenge.Application.Interfaces.ExternalServices
 {
     public interface IExternalOrderCaller
     {
-        
+        Task<bool> ProcessOrderAsync(long orderId, CancellationToken cancellationToken);
     }
 }

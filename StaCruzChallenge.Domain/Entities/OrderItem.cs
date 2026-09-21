@@ -8,7 +8,7 @@ namespace StaCruzChallenge.Domain.Entities
     public sealed class OrderItem
     {
         
-        public Guid Id {get;set;} = Guid.NewGuid();
+        public Guid Id {get;set;}
 
         public long OrderId {get;set;}
         public Guid ProductId {get;set;}

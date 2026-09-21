@@ -8,6 +8,7 @@ using StaCruzChallenge.Domain.Repositories;
 using StaCruzChallenge.Infrastructure.Persistence.Data;
 using Dapper;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 
 namespace StaCruzChallenge.Infrastructure.Persistence.Dapper
@@ -56,12 +57,17 @@ namespace StaCruzChallenge.Infrastructure.Persistence.Dapper
                     }, transaction: transaction, cancellationToken: cancellationToken)
                 );
 
+                order.Id = orderId;
+
                 foreach (var item in order.Items!)
                 {
+
+                    item.Id = Guid.NewGuid();
+                    item.OrderId = orderId;
                     var param = new
                     {
-                        Id = Guid.NewGuid(),
-                        OrderId = orderId,
+                        Id = item.Id,
+                        OrderId = item.OrderId,
                         ProductId = item.ProductId,
                         UnitValue = item.UnitValue,
                         Quantity = item.Quantity,
@@ -77,12 +83,12 @@ namespace StaCruzChallenge.Infrastructure.Persistence.Dapper
                 await conn.ExecuteAsync(
                     new CommandDefinition(
                         @"INSERT INTO outbox_orders (obo_id, obo_event_type, obo_payload, obo_status, obo_attempts, obo_createdat, obo_processedat)
-                          VALUES (@Id, @EventType, @Payload, @Status, @Attempts, @CreatedAt, NULL);",
+                          VALUES (@Id, @EventType, @Payload::jsonb, @Status, @Attempts, @CreatedAt, NULL);",
                         new
                         {
                             Id = outboxMessage.Id,
                             CreatedAt = outboxMessage.CreatedAt,
-                            Payload = outboxMessage.Payload,
+                            Payload = JsonSerializer.Serialize(order),
                             EventType = outboxMessage.EventType,
                             Status = outboxMessage.Status,
                             Attempts = outboxMessage.Attempts
@@ -144,7 +150,7 @@ namespace StaCruzChallenge.Infrastructure.Persistence.Dapper
             await using var conn = _connectionFactory.CreateConnection();
             await conn.OpenAsync(cancellationToken);
 
-            var orders = new Dictionary<int, Order>();
+            var orders = new Dictionary<long, Order>();
 
             await conn.QueryAsync<Order, OrderItem, Order>(
                 new CommandDefinition(getAllPaginatedSql, new { Offset = (pageNumber - 1) * pageSize, PageSize = pageSize }, cancellationToken: cancellationToken),
@@ -197,7 +203,7 @@ namespace StaCruzChallenge.Infrastructure.Persistence.Dapper
             await using var conn = _connectionFactory.CreateConnection();
             await conn.OpenAsync(cancellationToken);
 
-            var orders = new Dictionary<int, Order>();
+            var orders = new Dictionary<long, Order>();
 
             await conn.QueryAsync<Order, OrderItem, Order>(
                 new CommandDefinition(getOrderByIdSql, new { OrderId = id }, cancellationToken: cancellationToken),
@@ -222,6 +228,18 @@ namespace StaCruzChallenge.Infrastructure.Persistence.Dapper
 
             return orders.Values.SingleOrDefault();
 
+        }
+
+        public async Task UpdateStatusAsync(long orderId, string status, CancellationToken cancellationToken)
+        {
+            const string sql = "UPDATE orders SET o_status = @Status, o_updatedat = @UpdatedAt WHERE o_id = @OrderId";
+
+            await using var conn = _connectionFactory.CreateConnection();
+            await conn.OpenAsync(cancellationToken);
+
+            await conn.ExecuteAsync(new CommandDefinition(sql,
+                new { OrderId = orderId, Status = status, UpdatedAt = DateTime.Now },
+                cancellationToken: cancellationToken));
         }
     }
 }

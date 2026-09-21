@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using StaCruzChallenge.Application.Interfaces;
 using StaCruzChallenge.Application.Orders;
 using StaCruzChallenge.Domain.Entities;
+using StaCruzChallenge.Domain.Enums;
 using StaCruzChallenge.Domain.Repositories;
 
 namespace StaCruzChallenge.Application.Services
@@ -53,9 +54,8 @@ namespace StaCruzChallenge.Application.Services
             {
                 Id = Guid.NewGuid(),
                 CreatedAt = DateTime.UtcNow,
-                Payload = JsonSerializer.Serialize(orderEntity),
-                EventType = "NEW_ORDER_CREATED",
-                Status = "Pending",
+                EventType = "order.created",
+                Status = OrderStatus.Pending.ToString(),
                 Attempts =0
 
             }; 

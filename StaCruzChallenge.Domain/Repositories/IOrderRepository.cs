@@ -14,5 +14,7 @@ namespace StaCruzChallenge.Domain.Repositories
         Task<Order?> GetByIdAsync(long id, CancellationToken cancellationToken);
         Task<IEnumerable<Order>> GetAllPaginatedAsync(int pageNumber, int pageSize, CancellationToken cancellationToken);
 
+        Task UpdateStatusAsync(long id, string status, CancellationToken cancellationToken);
+
     }
 }
