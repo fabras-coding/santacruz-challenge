@@ -51,13 +51,21 @@ namespace StaCruzChallenge.Infrastructure.Messaging
 
                 _connection = await factory.CreateConnectionAsync(cancellationToken);
                 _channel = await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
-                
+
                 await _channel.ExchangeDeclareAsync(exchange, ExchangeType.Direct, durable: true, cancellationToken: cancellationToken);
-                await _channel.QueueDeclareAsync(queue, durable: true, exclusive: false, autoDelete: false, cancellationToken: cancellationToken);
+
+                var arguments = new Dictionary<string, object?> { ["x-queue-type"] = "quorum" };
+
+                await _channel.QueueDeclareAsync(queue, durable: true, exclusive: false, autoDelete: false, arguments: arguments, cancellationToken: cancellationToken);
                 await _channel.QueueBindAsync(queue, exchange, routingKey: routingKey, cancellationToken: cancellationToken);
 
+                //dead-letter exchange and queue
+                await _channel.ExchangeDeclareAsync("orders-dlx",ExchangeType.Direct,durable: true,cancellationToken: cancellationToken);
+                await _channel.QueueDeclareAsync("orders-dead",durable: true,exclusive: false,autoDelete: false,cancellationToken: cancellationToken);
+                await _channel.QueueBindAsync("orders-dead","orders-dlx","orders-dead",cancellationToken: cancellationToken);
 
-                _logger.LogInformation("RabbitMqEventPublisher initialized.");
+
+                _logger.LogInformation("RabbitMqEventPublisher initialized and configured.");
                 return _channel;
             }
             catch (Exception ex)
@@ -79,11 +87,11 @@ namespace StaCruzChallenge.Infrastructure.Messaging
 
         public async Task PublishAsync(string eventType, string payload, CancellationToken cancellationToken)
         {
-            
+
             var channel = await GetChannelAsync(cancellationToken);
             var body = Encoding.UTF8.GetBytes(payload);
 
-            var props = new BasicProperties {Persistent = true };
+            var props = new BasicProperties { Persistent = true };
 
             await channel.BasicPublishAsync(
                 exchange: _configuration["RabbitMq:Exchange"]!,
@@ -93,7 +101,7 @@ namespace StaCruzChallenge.Infrastructure.Messaging
                 body: body,
                 cancellationToken: cancellationToken
             );
-            
+
 
         }
     }

@@ -53,10 +53,9 @@ namespace StaCruzChallenge.Application.Services
             var outboxMessage = new OutboxOrderMessage
             {
                 Id = Guid.NewGuid(),
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.Now,
                 EventType = "order.created",
-                Status = OrderStatus.Pending.ToString(),
-                Attempts =0
+                Status = OrderStatus.Pending.ToString()
 
             }; 
 

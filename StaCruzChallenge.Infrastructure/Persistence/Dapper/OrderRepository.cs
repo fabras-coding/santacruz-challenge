@@ -82,16 +82,16 @@ namespace StaCruzChallenge.Infrastructure.Persistence.Dapper
 
                 await conn.ExecuteAsync(
                     new CommandDefinition(
-                        @"INSERT INTO outbox_orders (obo_id, obo_event_type, obo_payload, obo_status, obo_attempts, obo_createdat, obo_processedat)
-                          VALUES (@Id, @EventType, @Payload::jsonb, @Status, @Attempts, @CreatedAt, NULL);",
+                        @"INSERT INTO outbox_orders (obo_id, obo_event_type, obo_payload, obo_status, obo_createdat, obo_processedat)
+                          VALUES (@Id, @EventType, @Payload::jsonb, @Status, @CreatedAt, NULL);",
                         new
                         {
                             Id = outboxMessage.Id,
                             CreatedAt = outboxMessage.CreatedAt,
-                            Payload = JsonSerializer.Serialize(order),
+                            Payload = BuildOutboxPayload(order, outboxMessage.Id),
                             EventType = outboxMessage.EventType,
-                            Status = outboxMessage.Status,
-                            Attempts = outboxMessage.Attempts
+                            Status = outboxMessage.Status
+                            
                         },
                         transaction: transaction,
                         cancellationToken: cancellationToken
@@ -240,6 +240,29 @@ namespace StaCruzChallenge.Infrastructure.Persistence.Dapper
             await conn.ExecuteAsync(new CommandDefinition(sql,
                 new { OrderId = orderId, Status = status, UpdatedAt = DateTime.Now },
                 cancellationToken: cancellationToken));
+        }
+
+        private string BuildOutboxPayload(Order order, Guid outboxMessageId)
+        {
+            return JsonSerializer.Serialize(new
+            {
+                OutboxMessageId = outboxMessageId,
+                OrderId = order.Id,
+                UserId = order.UserId,
+                TotalAmount = order.TotalAmount,
+                Status = order.Status,
+                CreatedAt = order.CreatedAt,
+                UpdatedAt = order.UpdatedAt,
+                Items = order.Items.Select(i => new
+                {
+                    i.Id,
+                    i.OrderId,
+                    i.ProductId,
+                    i.Quantity,
+                    i.UnitValue,
+                    i.TotalAmount
+                }).ToList()
+            });
         }
     }
 }

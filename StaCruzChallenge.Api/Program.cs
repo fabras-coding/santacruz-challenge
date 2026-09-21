@@ -27,7 +27,7 @@ builder.Services.AddScoped<IExternalOrderCaller, FakeExternalOrderCaller>();
 builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>(); 
 
 builder.Services.AddHostedService<OrderProcessorWorker>();
-builder.Services.AddHostedService<OutboxPublishWorker>();
+builder.Services.AddHostedService<OutboxOrderPublishWorker>();
 
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -35,6 +35,8 @@ builder.Services.AddProblemDetails();
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

@@ -11,12 +11,12 @@ namespace StaCruzChallenge.Domain.Repositories
     {
         
         
-        Task<IReadOnlyList<OutboxOrderMessage>> GetPendingAsync(int size, CancellationToken cancellationToken);
+        Task<IReadOnlyList<OutboxOrderMessage>> GetPendingAsync(int size, int forgottenMessagesIntervalMinutes, CancellationToken cancellationToken);
         Task MarkAsEnqueuedAsync(Guid id, CancellationToken cancellationToken);
         Task MarkAsProcessedAsync(Guid id, CancellationToken cancellationToken);
 
         Task MarkAsFailedAsync(Guid id, CancellationToken cancellationToken);
-        Task IncrementAttemptsAsync(Guid id, CancellationToken cancellationToken);
+        
 
     }
 }

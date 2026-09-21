@@ -1,0 +1,87 @@
+{
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "users": [
+    {
+      "name": "admin",
+      "password_hash": "D5aoitRTKhlxjpxCHykzN0ziRBOpmwFueuNyHoBbQJT49MnC",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": "administrator"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "admin",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "policies": [
+    {
+      "vhost": "/",
+      "name": "orders-retry-limit",
+      "pattern": "^q\\.order\\.created$",
+      "apply-to": "quorum_queues",
+      "definition": {
+        "delivery-limit": 20,
+        "dead-letter-exchange": "orders-dlx",
+        "dead-letter-routing-key": "orders-dead"
+      },
+      "priority": 10
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "ex.orders",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false
+    },
+    {
+      "name": "orders-dlx",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false
+    }
+  ],
+  "queues": [
+    {
+      "name": "q.order.created",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-queue-type": "quorum"
+      }
+    },
+    {
+      "name": "orders-dead",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false
+    }
+  ],
+  "bindings": [
+    {
+      "source": "ex.orders",
+      "vhost": "/",
+      "destination": "q.order.created",
+      "destination_type": "queue",
+      "routing_key": "order.created"
+    },
+    {
+      "source": "orders-dlx",
+      "vhost": "/",
+      "destination": "orders-dead",
+      "destination_type": "queue",
+      "routing_key": "orders-dead"
+    }
+  ]
+}

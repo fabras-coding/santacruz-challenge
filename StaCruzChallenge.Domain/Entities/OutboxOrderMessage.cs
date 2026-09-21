@@ -13,6 +13,6 @@ namespace StaCruzChallenge.Domain.Entities
         public DateTime CreatedAt { get; set; }
         public DateTime? ProcessedAt { get; set; }
         public string Status {get;set;}
-        public int Attempts { get; set; }
+        
     }
 }
