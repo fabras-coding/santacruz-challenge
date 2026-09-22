@@ -20,6 +20,21 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+const string CorsPolicyName = "FrontendCors";
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174"];
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(CorsPolicyName, policy =>
+    {
+        policy.WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
 builder.Services.AddSwaggerGen(options =>
 {
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -42,41 +57,14 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
-{
+    {
     options.Authority = builder.Configuration["Keycloak:Authority"];
     options.Audience = builder.Configuration["Keycloak:Audience"];
     options.RequireHttpsMetadata =
         builder.Configuration.GetValue<bool>("Keycloak:RequireHttpsMetadata");
-
-    options.Events = new JwtBearerEvents
-    {
-        OnAuthenticationFailed = context =>
-        {
-            Console.WriteLine($"JWT failed: {context.Exception.Message}");
-            return Task.CompletedTask;
-        },
-        OnChallenge = context =>
- {
-     Console.WriteLine(
-         $"JWT challenge: error={context.Error}, " +
-         $"description={context.ErrorDescription}, " +
-         $"uri={context.ErrorUri}");
-
-     return Task.CompletedTask;
- },
-        OnMessageReceived = context =>
-       {
-           Console.WriteLine(
-               $"Authorization header present: {!string.IsNullOrWhiteSpace(context.Token)}");
-
-           return Task.CompletedTask;
-       }
-    };
+    options.MapInboundClaims = false;
+    
 });
-
-
-
-
 
 
 
@@ -111,6 +99,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors(CorsPolicyName);
 
 app.UseAuthentication();
 app.UseAuthorization();

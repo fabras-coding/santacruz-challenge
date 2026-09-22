@@ -15,7 +15,8 @@ namespace StaCruzChallenge.Api.Middleware
             {
                 
 
-                _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.")
+                ArgumentException => (StatusCodes.Status400BadRequest, exception.Message),
+                _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred."),
                 
 
             };

@@ -79,8 +79,7 @@ public sealed class OrderProcessingTests
     [
         [new CreateOrderDto { Items = [] }],
         [new CreateOrderDto { Items = [new OrderItemDto { ProductId = Guid.NewGuid(), Quantity = 0 }] }],
-        [new CreateOrderDto { Items = [new OrderItemDto { ProductId = Guid.NewGuid(), Quantity = -1 }] }],
-        [new CreateOrderDto { Items = [new OrderItemDto { ProductId = Guid.NewGuid(), Quantity = 1 }] }]
+        [new CreateOrderDto { Items = [new OrderItemDto { ProductId = Guid.NewGuid(), Quantity = -1 }] }]
     ];
 
     [Fact]

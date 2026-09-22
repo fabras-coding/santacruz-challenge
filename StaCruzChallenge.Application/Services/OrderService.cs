@@ -41,12 +41,15 @@ namespace StaCruzChallenge.Application.Services
             var products = await _productService.GetAllAsync(cancellationToken); //it could be cached
             var validProducts = products.Where(p => order.Items!.Any(i => i.ProductId == p.Id)).ToArray();
 
+
+            if(validProducts.Length == 0)
+                throw new ArgumentException("None of the selected products exist in the catalog.", nameof(order));
+
             if (order.Items.Any(i => validProducts.All(p => p.Id != i.ProductId)))
                 throw new ArgumentException("One or more selected products do not exist in the catalog.", nameof(order));
 
             if (validProducts.Any(product => product.Price <= 0))
                 throw new ArgumentException("Catalog products must have a positive price.", nameof(order));
-
 
             var orderEntity = new Order()
             {
