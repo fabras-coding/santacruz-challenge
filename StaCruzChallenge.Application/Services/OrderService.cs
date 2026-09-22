@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using StaCruzChallenge.Application.Interfaces;
+using StaCruzChallenge.Application.Interfaces.Security;
 using StaCruzChallenge.Application.Orders;
 using StaCruzChallenge.Domain.Entities;
 using StaCruzChallenge.Domain.Enums;
@@ -17,19 +18,21 @@ namespace StaCruzChallenge.Application.Services
 
         private readonly IOrderRepository _orderRepository;
         private readonly IProductService _productService;
+        private readonly ICurrentUser _currentUser;
         private readonly ILogger<OrderService> _logger;
 
-        public OrderService(IOrderRepository orderRepository, IProductService productService, ILogger<OrderService> logger)
+        public OrderService(IOrderRepository orderRepository, IProductService productService, ICurrentUser currentUser, ILogger<OrderService> logger)
         {
             _orderRepository = orderRepository;
             _productService = productService;
+            _currentUser = currentUser;
             _logger = logger;
         }
 
         public async Task<OrderCreatedResponseDto> CreateOrderAsync(CreateOrderDto order, CancellationToken cancellationToken)
         {
 
-            var products = await _productService.GetAllAsync(cancellationToken);
+            var products = await _productService.GetAllAsync(cancellationToken); //it could be cached
             var validProducts = products.Where(p => order.Items!.Any(i => i.ProductId == p.Id)).ToArray();
 
             var excludedProducts = order.Items!.Where(i => validProducts.All(p => p.Id != i.ProductId)).ToArray();
@@ -41,6 +44,7 @@ namespace StaCruzChallenge.Application.Services
             {
                 Items = order.Items!.Select(i => new OrderItem
                 {
+                    //UserId = _currentUser.UserId,
                     ProductId = i.ProductId,
                     Quantity = i.Quantity,
                     UnitValue = validProducts.First(p => p.Id == i.ProductId).Price,
@@ -114,7 +118,7 @@ namespace StaCruzChallenge.Application.Services
                 UpdatedAt = order.UpdatedAt,
                 TotalAmount = order.TotalAmount,
                 Status = order.Status!,
-                Items = order.Items.Select(i => new GetOrderItemDto
+                Items = order.Items!.Select(i => new GetOrderItemDto
                 {
                     ProductId = i.ProductId,
                     Quantity = i.Quantity,

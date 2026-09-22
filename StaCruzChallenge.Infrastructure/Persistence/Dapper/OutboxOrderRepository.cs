@@ -33,20 +33,31 @@ namespace StaCruzChallenge.Infrastructure.Persistence.Dapper
 
             await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
 
-            //TODO: Improve to not have Pending messages for too long without being processed
-
-
-            var query = @"SELECT obo_id AS Id, obo_event_type AS EventType, obo_payload AS Payload, obo_status AS Status, obo_createdat AS CreatedAt
+            var query = "";
+            if(forgottenMessagesIntervalMinutes > 0){
+                query = @"SELECT obo_id AS Id, obo_event_type AS EventType, obo_payload AS Payload, obo_status AS Status, obo_createdat AS CreatedAt
                           FROM outbox_orders
-                          WHERE obo_status <> 'Processed'
+                          WHERE obo_status <> 'Completed'
                           AND obo_createdat <= NOW() - (@ForgottenMessagesIntervalMinutes * INTERVAL '1 minute')
                           ORDER BY obo_createdat
                           LIMIT @Size
                           FOR UPDATE SKIP LOCKED";
 
+            }
+            else
+            {
+                query = @"SELECT obo_id AS Id, obo_event_type AS EventType, obo_payload AS Payload, obo_status AS Status, obo_createdat AS CreatedAt
+                          FROM outbox_orders
+                          WHERE obo_status = 'Pending'
+                          ORDER BY obo_createdat
+                          LIMIT @Size
+                          FOR UPDATE SKIP LOCKED";
+            }
+
+            
 
             var result = await connection.QueryAsync<OutboxOrderMessage>(query,
-             new { Size = size, ForgottenMessagesIntervalMinutes = forgottenMessagesIntervalMinutes }, transaction: transaction);
+            forgottenMessagesIntervalMinutes > 0 ? new { Size = size, ForgottenMessagesIntervalMinutes = forgottenMessagesIntervalMinutes } : new { Size = size }, transaction: transaction);
 
             if(result is null || !result.Any())
             {
@@ -63,12 +74,12 @@ namespace StaCruzChallenge.Infrastructure.Persistence.Dapper
             if (ids.Length > 0)
             {
                 await connection.ExecuteAsync(updateQuery,
-                 new { Ids = ids, Status = OrderStatus.InProgress.ToString() }, transaction: transaction);
+                 new { Ids = ids, Status = OrderStatus.Processing.ToString() }, transaction: transaction);
             }
 
             await transaction.CommitAsync(cancellationToken);
             _logger.LogInformation("Retrieved {ItemCount} pending outbox order messages.", result.Count());
-            _logger.LogInformation("Updated status to InProgress for {ItemCount} outbox order messages.", ids.Length);
+            _logger.LogInformation("Updated status to Processing for {ItemCount} outbox order messages.", ids.Length);
 
 
             return result.ToList();
@@ -81,11 +92,11 @@ namespace StaCruzChallenge.Infrastructure.Persistence.Dapper
             await connection.OpenAsync(cancellationToken: cancellationToken);
 
             var query = @"UPDATE outbox_orders
-                          SET obo_status = @Status, obo_processedat = NOW()
+                          SET obo_status = @Status, obo_processedat = @Now
                           WHERE obo_id = @Id";
 
             await connection.ExecuteAsync(query,
-             new { Id = id, Status = OrderStatus.Failed.ToString() });
+             new { Id = id, Status = OrderStatus.Failed.ToString(), Now = DateTime.Now });
         }
 
         public async Task MarkAsEnqueuedAsync(Guid id, CancellationToken cancellationToken)
@@ -95,11 +106,11 @@ namespace StaCruzChallenge.Infrastructure.Persistence.Dapper
             await connection.OpenAsync(cancellationToken: cancellationToken);
 
             var query = @"UPDATE outbox_orders
-                          SET obo_status = @Status, obo_processedat = NOW()
+                          SET obo_status = @Status, obo_processedat = @Now
                           WHERE obo_id = @Id";
 
             await connection.ExecuteAsync(query,
-             new { Id = id, Status = OrderStatus.Enqueued.ToString() });
+             new { Id = id, Status = OrderStatus.Enqueued.ToString(), Now = DateTime.Now });
 
 
         }
@@ -111,11 +122,11 @@ namespace StaCruzChallenge.Infrastructure.Persistence.Dapper
             await connection.OpenAsync(cancellationToken: cancellationToken);
 
             var query = @"UPDATE outbox_orders
-                          SET obo_status = @Status, obo_processedat = NOW()
+                          SET obo_status = @Status, obo_processedat = @Now
                           WHERE obo_id = @Id";
 
             await connection.ExecuteAsync(query,
-             new { Id = id, Status = OrderStatus.Processed.ToString() });
+             new { Id = id, Status = OrderStatus.Completed.ToString(), Now = DateTime.Now });
 
 
         }

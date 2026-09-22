@@ -9,7 +9,7 @@ namespace StaCruzChallenge.Domain.Entities
     {
         
         public Guid Id {get;set;}
-
+        public Guid UserId {get;set;}
         public long OrderId {get;set;}
         public Guid ProductId {get;set;}
         public int Quantity {get;set;}

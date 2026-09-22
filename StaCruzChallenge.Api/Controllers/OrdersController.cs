@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StaCruzChallenge.Application.Interfaces;
 using StaCruzChallenge.Application.Orders;
@@ -20,6 +21,7 @@ namespace StaCruzChallenge.Api.Controllers
             _orderService = orderService;
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateOrderAsync([FromBody] CreateOrderDto order, CancellationToken cancellationToken)
         {
@@ -27,6 +29,7 @@ namespace StaCruzChallenge.Api.Controllers
             return Accepted(result);
         }
 
+        [Authorize]
         [HttpGet("{id:long}")]
         public async Task<IActionResult> GetOrderByIdAsync(long id , CancellationToken cancellationToken)
         {
@@ -41,6 +44,8 @@ namespace StaCruzChallenge.Api.Controllers
             return Ok(result);
         }
 
+
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAllOrdersAsync(int pageNumber = 1, int pageSize = 10, CancellationToken cancellationToken = default)
         {

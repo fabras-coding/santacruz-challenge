@@ -135,6 +135,7 @@ namespace StaCruzChallenge.Infrastructure.Persistence.Dapper
             o.o_status    AS Status,
             
             oi.oi_id      AS ItemId,
+            oi.oi_id      AS Id,
             oi.oi_order_id AS OrderId,
             oi.oi_product_id AS ProductId,
             oi.oi_quantity   AS Quantity,
@@ -189,6 +190,7 @@ namespace StaCruzChallenge.Infrastructure.Persistence.Dapper
             o.o_status    AS Status,
             
             oi.oi_id      AS ItemId,
+            oi.oi_id      AS Id,
             oi.oi_order_id AS OrderId,
             oi.oi_product_id AS ProductId,
             oi.oi_quantity   AS Quantity,

@@ -65,15 +65,20 @@ namespace StaCruzChallenge.Infrastructure.Workers
                 {
                     var result = await ProcessMessageAsync(payload, stoppingToken);
                     if (result.Item1)
-                        {
-                            await _channel!.BasicAckAsync(ea.DeliveryTag, multiple: false, stoppingToken);
-                            _logger.LogInformation("Order message processed successfully.");
-                        }
-                    else if(!result.Item1 && !result.Item2)
-                        {
-                            await _channel!.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: true, stoppingToken);
-                            _logger.LogWarning("Order message processing failed, message requeued.");
-                        }
+                    {
+                        await _channel!.BasicAckAsync(ea.DeliveryTag, multiple: false, stoppingToken);
+                        _logger.LogInformation("Order message processed successfully.");
+                    }
+                    else if (!result.Item1 && !result.Item2)
+                    {
+                        await _channel!.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: true, stoppingToken);
+                        _logger.LogWarning("Order message processing failed, message requeued.");
+                    }
+                    else if (!result.Item1 && result.Item2)
+                    {
+                        await _channel!.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: false, stoppingToken);
+                        _logger.LogError("Order message processing failed and will not be requeued.");
+                    }
 
                 }
                 catch (Exception ex)
@@ -89,8 +94,16 @@ namespace StaCruzChallenge.Infrastructure.Workers
             await Task.Delay(Timeout.Infinite, stoppingToken);
         }
 
+        /// <summary>
+        /// Processes an order message from the queue.
+        /// </summary>
+        /// <param name="payload">The JSON payload of the order message.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A tuple indicating the success and whether the message should be requeued.</returns>
+        /// <exception cref="InvalidOperationException"></exception>
         private async Task<Tuple<bool, bool>> ProcessMessageAsync(string payload, CancellationToken cancellationToken)
         {
+            
             var JsonDocument = JsonSerializer.Deserialize<JsonDocument>(payload)
                 ?? throw new InvalidOperationException("Could not deserialize the payload.");
 
@@ -98,26 +111,27 @@ namespace StaCruzChallenge.Infrastructure.Workers
             var outboxMessageId = JsonDocument.RootElement.GetProperty("OutboxMessageId").GetGuid();
 
             using var scope = _serviceScopeFactory.CreateScope();
-            var orderRepository = scope.ServiceProvider.GetRequiredService<IOrderRepository>();
             var attemptRepository = scope.ServiceProvider.GetRequiredService<IOrderProcessingAttemptsRepository>();
-            var outboxOrderRepository = scope.ServiceProvider.GetRequiredService<IOutboxOrderRepository>();
-            var externalCaller = scope.ServiceProvider.GetRequiredService<IExternalOrderCaller>();
+           
 
             var previousAttempts = await attemptRepository.GetByOrderIdAsync(orderId, cancellationToken);
             var maxRetryAttempts = _configuration.GetValue<int>("ProcessingAttempt:MaxRetryAttempts");
 
-            if(previousAttempts.Any(att => att.Success))
+            if (previousAttempts.Any(att => att.Success))
             {
                 _logger.LogInformation("Order {OrderId} has already been successfully processed.", orderId);
                 return Tuple.Create(true, false);
             }
 
-            if(previousAttempts.Count >= maxRetryAttempts)
+            if (previousAttempts.Count >= maxRetryAttempts)
             {
                 _logger.LogWarning("Order {OrderId} has reached the maximum number of retry attempts.", orderId);
                 return Tuple.Create(false, true);
             }
 
+            var orderRepository = scope.ServiceProvider.GetRequiredService<IOrderRepository>();
+            var outboxOrderRepository = scope.ServiceProvider.GetRequiredService<IOutboxOrderRepository>();
+            var externalCaller = scope.ServiceProvider.GetRequiredService<IExternalOrderCaller>();
 
             var attempt = new OrderProcessingAttempts
             {
@@ -138,7 +152,7 @@ namespace StaCruzChallenge.Infrastructure.Workers
                 if (success)
                 {
                     await orderRepository.UpdateStatusAsync(
-                    orderId, OrderStatus.Processed.ToString(),
+                    orderId, OrderStatus.Completed.ToString(),
                     cancellationToken);
 
                     await outboxOrderRepository.MarkAsProcessedAsync(outboxMessageId, cancellationToken);
@@ -150,7 +164,6 @@ namespace StaCruzChallenge.Infrastructure.Workers
             }
             catch (Exception ex)
             {
-                attempt.EndedAt = DateTime.Now;
                 attempt.Success = false;
                 attempt.ErrorMessage = ex.Message;
 

@@ -20,7 +20,7 @@ namespace StaCruzChallenge.Api.Controllers
         }
 
 
-        //[Authorize]
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
         {
