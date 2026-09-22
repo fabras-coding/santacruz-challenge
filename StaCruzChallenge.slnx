@@ -3,4 +3,5 @@
   <Project Path="StaCruzChallenge.Application/StaCruzChallenge.Application.csproj" />
   <Project Path="StaCruzChallenge.Domain/StaCruzChallenge.Domain.csproj" />
   <Project Path="StaCruzChallenge.Infrastructure/StaCruzChallenge.Infrastructure.csproj" />
+  <Project Path="StaCruzChallenge.Tests/StaCruzChallenge.Tests.csproj" />
 </Solution>

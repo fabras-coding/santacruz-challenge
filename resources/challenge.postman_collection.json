@@ -1,0 +1,198 @@
+{
+  "info": {
+    "_postman_id": "99bff4c5-694b-402c-9a30-5340529c6ab3",
+    "name": "challenge",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "3122618"
+  },
+  "item": [
+    {
+      "name": "Products",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://localhost:7024/api/products",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "7024",
+          "path": [
+            "api",
+            "products"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Orders",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"items\" : [\n        { \"productId\": \"60d8afcf-3126-4d86-b7e2-5d7126a9e02e\", \"quantity\" : 1}\n    ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://localhost:7024/api/orders",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "7024",
+          "path": [
+            "api",
+            "orders"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Order By Id",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://localhost:7024/api/orders/3",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "7024",
+          "path": [
+            "api",
+            "orders",
+            "3"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Orders Paginated",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://localhost:7024/api/orders?pageNumber=1&pageSize=10",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "7024",
+          "path": [
+            "api",
+            "orders"
+          ],
+          "query": [
+            {
+              "key": "pageNumber",
+              "value": "1"
+            },
+            {
+              "key": "pageSize",
+              "value": "10"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "KeyCloack Acces Token",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "grant_type",
+              "value": "password"
+            },
+            {
+              "key": "client_id",
+              "value": "santacruz-api"
+            },
+            {
+              "key": "client_secret",
+              "value": "dzEXmDsfUze8LByqXF8MizbKo7TT2Ydi"
+            },
+            {
+              "key": "username",
+              "value": "santa"
+            },
+            {
+              "key": "password",
+              "value": "12gerencial34"
+            }
+          ]
+        },
+        "url": {
+          "raw": "https://localhost:7024/realms/santacruz/protocol/openid-connect/token",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "7024",
+          "path": [
+            "realms",
+            "santacruz",
+            "protocol",
+            "openid-connect",
+            "token"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

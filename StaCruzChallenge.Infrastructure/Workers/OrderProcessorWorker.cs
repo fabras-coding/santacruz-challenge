@@ -101,6 +101,9 @@ namespace StaCruzChallenge.Infrastructure.Workers
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A tuple indicating the success and whether the message should be requeued.</returns>
         /// <exception cref="InvalidOperationException"></exception>
+        internal Task<Tuple<bool, bool>> ProcessMessageForTestAsync(string payload, CancellationToken cancellationToken) =>
+            ProcessMessageAsync(payload, cancellationToken);
+
         private async Task<Tuple<bool, bool>> ProcessMessageAsync(string payload, CancellationToken cancellationToken)
         {
             
@@ -157,6 +160,10 @@ namespace StaCruzChallenge.Infrastructure.Workers
 
                     await outboxOrderRepository.MarkAsProcessedAsync(outboxMessageId, cancellationToken);
                     _logger.LogInformation("Order {OutboxMessageId} processed successfully.", outboxMessageId);
+                }
+                else
+                {
+                    await orderRepository.UpdateStatusAsync(orderId, OrderStatus.Failed.ToString(), cancellationToken);
                 }
 
 

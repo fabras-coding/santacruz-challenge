@@ -32,17 +32,26 @@ namespace StaCruzChallenge.Application.Services
         public async Task<OrderCreatedResponseDto> CreateOrderAsync(CreateOrderDto order, CancellationToken cancellationToken)
         {
 
+            if (order.Items is null || order.Items.Length == 0)
+                throw new ArgumentException("An order must contain at least one item.", nameof(order));
+
+            if (order.Items.Any(item => item.Quantity <= 0))
+                throw new ArgumentException("Item quantity must be greater than zero.", nameof(order));
+
             var products = await _productService.GetAllAsync(cancellationToken); //it could be cached
             var validProducts = products.Where(p => order.Items!.Any(i => i.ProductId == p.Id)).ToArray();
 
-            var excludedProducts = order.Items!.Where(i => validProducts.All(p => p.Id != i.ProductId)).ToArray();
-            if (excludedProducts.Any())
-                _logger.LogWarning("The following products are not valid and will be excluded from the order: {ExcludedProducts}", excludedProducts.Select(i => i.ProductId));
+            if (order.Items.Any(i => validProducts.All(p => p.Id != i.ProductId)))
+                throw new ArgumentException("One or more selected products do not exist in the catalog.", nameof(order));
+
+            if (validProducts.Any(product => product.Price <= 0))
+                throw new ArgumentException("Catalog products must have a positive price.", nameof(order));
 
 
             var orderEntity = new Order()
             {
-                Items = order.Items!.Select(i => new OrderItem
+                UserId = _currentUser.UserId,
+                Items = order.Items.Select(i => new OrderItem
                 {
                     //UserId = _currentUser.UserId,
                     ProductId = i.ProductId,
@@ -50,8 +59,7 @@ namespace StaCruzChallenge.Application.Services
                     UnitValue = validProducts.First(p => p.Id == i.ProductId).Price,
                     TotalAmount = i.Quantity * validProducts.First(p => p.Id == i.ProductId).Price
                 }).ToArray(),
-                TotalAmount = order.Items!.Where(i => validProducts.All(p => p.Id != i.ProductId) == false)
-                    .Sum(i => i.Quantity * validProducts.First(p => p.Id == i.ProductId).Price)
+                TotalAmount = order.Items.Sum(i => i.Quantity * validProducts.First(p => p.Id == i.ProductId).Price)
             };
 
             var outboxMessage = new OutboxOrderMessage
